@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markaz Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f0ec;
+  --white: #ffffff;
+  --text: #111;
+  --muted: #999;
+  --border: #e2e2de;
+  --green: #2d5a3d;
+  --green-light: #edf4ef;
+  --red: #c0392b;
+  --red-light: #fdf0ef;
+  --orange: #d68910;
+  --orange-light: #fef9ec;
+  --blue: #2471a3;
+  --blue-light: #eaf4fb;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --sidebar-w: 230px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ===== LOGIN ===== */
+#loginScreen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #0f1e15 0%, #1e3d29 50%, #2d5a3d 100%);
+  padding: 24px;
+}
+.login-card {
+  background: var(--white); border-radius: 24px;
+  padding: 40px 32px; width: 100%; max-width: 400px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+}
+.login-logo-area { text-align: center; margin-bottom: 32px; }
+.login-logo-area h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--green); }
+.login-logo-area p { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-top: 4px; }
+.tab-row { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+.tab-btn { flex: 1; padding: 9px; border: none; background: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--muted); transition: all 0.2s; }
+.tab-btn.active { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+.field input { padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; background: var(--bg); transition: border-color 0.2s; }
+.field input:focus { border-color: var(--green); background: #fff; }
+.primary-btn { width: 100%; padding: 14px; background: var(--green); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.2s; margin-top: 4px; }
+.primary-btn:hover { background: #234a30; }
+.primary-btn:disabled { background: var(--muted); cursor: not-allowed; }
+.form-error { font-size: 12px; color: var(--red); margin-bottom: 8px; display: none; }
+.form-error.show { display: block; }
+.form-success { font-size: 13px; color: var(--green); background: var(--green-light); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; display: none; }
+.form-success.show { display: block; }
+.login-hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== ADMIN APP ===== */
+#adminApp { display: none; min-height: 100vh; }
+#adminApp.show { display: flex; flex-direction: column; }
+
+/* TOP BAR */
+.topbar {
+  height: 56px; background: var(--white); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px;
+  gap: 14px; position: sticky; top: 0; z-index: 50;
+}
+.topbar-menu { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text); }
+.topbar-logo { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green); flex: 1; }
+.topbar-user { font-size: 12px; color: var(--muted); }
+.topbar-logout { background: var(--red-light); color: var(--red); border: none; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+/* LAYOUT */
+.app-body { display: flex; flex: 1; }
+.sidebar {
+  width: var(--sidebar-w); background: #0f1e15; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  position: fixed; top: 56px; bottom: 0; left: 0; z-index: 40;
+  transform: translateX(-100%); transition: transform 0.3s;
+  overflow-y: auto;
+}
+.sidebar.open { transform: translateX(0); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; top: 56px; background: rgba(0,0,0,0.4); z-index: 39; }
+.sidebar-overlay.show { display: block; }
+.sidebar-section { padding: 12px 10px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); }
+.nav-btn {
+  display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+  border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500;
+  color: rgba(255,255,255,0.6); margin: 2px 8px; transition: all 0.15s;
+  border: none; background: none; font-family: 'DM Sans', sans-serif; width: calc(100% - 16px); text-align: left;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav-btn.active { background: var(--green); color: #fff; }
+.nav-btn .icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-badge { margin-left: auto; background: #e74c3c; color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+.main { flex: 1; padding: 20px; min-height: calc(100vh - 56px); overflow-x: hidden; }
+
+/* ===== PAGES ===== */
+.page { display: none; }
+.page.active { display: block; }
+.page-header { margin-bottom: 20px; }
+.page-header h2 { font-family: 'Playfair Display', serif; font-size: 26px; }
+.page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+/* STATS */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.stat { background: var(--white); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.stat-icon { font-size: 24px; margin-bottom: 8px; }
+.stat-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-top: 4px; }
+
+/* CARDS */
+.card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 14px; font-weight: 700; }
+.card-body { padding: 14px 16px; }
+
+/* ORDER CARDS */
+.order-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 0;
+  border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background 0.1s;
+}
+.order-item:last-child { border-bottom: none; }
+.order-item:hover { background: var(--bg); margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-radius: 8px; }
+.order-avatar { width: 40px; height: 40px; border-radius: 10px; background: var(--green-light); color: var(--green); font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.order-info { flex: 1; min-width: 0; }
+.order-name { font-size: 14px; font-weight: 600; }
+.order-meta { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-right { text-align: right; flex-shrink: 0; }
+.order-amount { font-size: 14px; font-weight: 700; color: var(--green); }
+.status-pill { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; margin-top: 4px; }
+.pill-pending { background: var(--orange-light); color: var(--orange); }
+.pill-dispatched { background: var(--blue-light); color: var(--blue); }
+.pill-delivered { background: var(--green-light); color: var(--green); }
+
+/* SEARCH */
+.search-row { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+.search-input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; background: var(--white); }
+.search-input:focus { border-color: var(--green); }
+.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-pill { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; background: var(--white); font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.filter-pill.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* PRODUCT GRID */
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.product-card-admin {
+  background: var(--white); border-radius: var(--radius); border: 1px solid var(--border);
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.product-card-img { width: 100%; aspect-ratio: 4/3; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 48px; overflow: hidden; position: relative; }
+.product-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.product-card-body { padding: 12px; }
+.product-card-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; line-height: 1.3; }
+.product-card-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+.product-card-price { font-size: 15px; font-weight: 700; color: var(--green); }
+.product-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+.action-btn { flex: 1; padding: 7px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.btn-edit { background: var(--blue-light); color: var(--blue); }
+.btn-delete { background: var(--red-light); color: var(--red); }
+.out-stock-tag { position: absolute; top: 6px; left: 6px; background: rgba(192,57,43,0.85); color: #fff; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 8px; text-transform: uppercase; }
+
+/* CATEGORIES */
+.cat-list { display: flex; flex-direction: column; gap: 10px; }
+.cat-row { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.cat-icon-display { font-size: 28px; width: 44px; height: 44px; background: var(--bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cat-info { flex: 1; }
+.cat-name { font-size: 14px; font-weight: 600; }
+.cat-slug { font-size: 11px; color: var(--muted); }
+.btn-del-cat { padding: 7px 12px; background: var(--red-light); color: var(--red); border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+/* REVIEWS */
+.review-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; margin-bottom: 10px; }
+.review-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.review-name { font-weight: 600; font-size: 14px; }
+.review-stars { color: #f39c12; font-size: 15px; }
+.review-product { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+.review-text { font-size: 13px; color: #555; line-height: 1.6; }
+.review-time { font-size: 11px; color: var(--muted); margin-top: 8px; }
+.btn-del-review { padding: 5px 10px; background: var(--red-light); color: var(--red); border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 8px; }
+
+/* SETTINGS */
+.settings-section { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; }
+.settings-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.settings-section p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+
+/* BOTTOM SHEET */
+.sheet-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
+.sheet-overlay.open { display: flex; }
+.sheet { background: var(--white); width: 100%; border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto; }
+.sheet-inner { padding: 0 18px 32px; }
+.sheet-title { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 4px; }
+.sheet-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+/* MISC */
+.top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.add-btn-top { padding: 10px 18px; background: var(--green); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.secondary-btn { padding: 10px 18px; background: var(--white); color: var(--text); border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; margin-top: 8px; }
+.empty-state { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 14px; }
+.empty-state .e-icon { font-size: 40px; margin-bottom: 12px; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 14px; font-weight: 500; }
+.toggle-sub { font-size: 12px; color: var(--muted); }
+.toggle { width: 44px; height: 24px; background: var(--border); border-radius: 12px; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+.toggle.on { background: var(--green); }
+.toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.toggle.on::after { transform: translateX(20px); }
+.detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.detail-row:last-child { border-bottom: none; }
+.status-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.status-action-btn { padding: 9px 16px; border-radius: 9px; border: 1.5px solid var(--border); font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; background: var(--white); transition: all 0.15s; }
+.status-action-btn.pending.active,.status-action-btn.pending:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+.status-action-btn.dispatched.active,.status-action-btn.dispatched:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+.status-action-btn.delivered.active,.status-action-btn.delivered:hover { background: var(--green-light); border-color: var(--green); color: var(--green); }
+.danger-btn { padding: 12px; background: var(--red-light); color: var(--red); border: 1.5px solid #f0b9b4; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; width: 100%; margin-top: 10px; }
+
+@media(min-width: 768px) {
+  .stats-row { grid-template-columns: repeat(4,1fr); }
+  .product-grid { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo-area">
+      <h1>Markaz</h1>
+      <p>Admin Panel</p>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchLoginTab('login',this)">Login</button>
+      <button class="tab-btn" onclick="switchLoginTab('forgot',this)">Forgot Password</button>
+    </div>
+
+    <div class="tab-panel active" id="lp-login">
+      <div class="field"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@markaz.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="field"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="form-error" id="loginErr"></div>
+      <button class="primary-btn" id="loginBtn" onclick="doLogin()">Login to Admin Panel</button>
+      <p class="login-hint">Admin access only</p>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><button onclick="previewBypass()" style="width:100%;padding:11px;background:none;border:1.5px dashed #ccc;border-radius:10px;font-size:13px;font-weight:600;color:#999;cursor:pointer;font-family:DM Sans,sans-serif">👁️ Preview Layout (no login)</button></div>
+    </div>
+
+    <div class="tab-panel" id="lp-forgot">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter your admin email and we'll send a password reset link.</p>
+      <div class="field"><label>Admin Email</label><input type="email" id="forgotAdminEmail" placeholder="admin@markaz.com"></div>
+      <div class="form-error" id="forgotErr"></div>
+      <div class="form-success" id="forgotOk">✅ Reset link sent! Check your inbox.</div>
+      <button class="primary-btn" id="forgotBtn" onclick="doForgot()">Send Reset Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN APP ===== -->
+<div id="adminApp">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="topbar-menu" onclick="toggleSidebar()">☰</button>
+    <span class="topbar-logo">Markaz</span>
+    <span class="topbar-user" id="topbarUser"></span>
+    <button class="topbar-logout" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="app-body">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+      <div style="padding:8px 0">
+        <div class="sidebar-section">Main</div>
+        <button class="nav-btn active" onclick="goPage('dashboard',this)"><span class="icon">📊</span>Dashboard</button>
+        <button class="nav-btn" onclick="goPage('orders',this)"><span class="icon">📦</span>Orders<span class="nav-badge" id="pendingBadge">0</span></button>
+        <div class="sidebar-section">Catalogue</div>
+        <button class="nav-btn" onclick="goPage('products',this)"><span class="icon">🏷️</span>Products</button>
+        <button class="nav-btn" onclick="goPage('categories',this)"><span class="icon">🗂️</span>Categories</button>
+        <div class="sidebar-section">Feedback</div>
+        <button class="nav-btn" onclick="goPage('reviews',this)"><span class="icon">⭐</span>Reviews</button>
+        <div class="sidebar-section">Admin</div>
+        <button class="nav-btn" onclick="goPage('settings',this)"><span class="icon">⚙️</span>Settings</button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header"><h2>Dashboard</h2><p>Here's what's happening today.</p></div>
+        <div class="stats-row">
+          <div class="stat"><div class="stat-icon">📦</div><div class="stat-val" id="s-total">—</div><div class="stat-label">Total Orders</div></div>
+          <div class="stat"><div class="stat-icon">⏳</div><div class="stat-val" id="s-pending" style="color:var(--orange)">—</div><div class="stat-label">Pending</div></div>
+          <div class="stat"><div class="stat-icon">💰</div><div class="stat-val" id="s-revenue">—</div><div class="stat-label">Revenue</div></div>
+          <div class="stat"><div class="stat-icon">🏷️</div><div class="stat-val" id="s-products">—</div><div class="stat-label">Products</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent Orders</span><button class="filter-pill" onclick="goPage('orders',document.querySelector('[onclick*=orders]'))">View all</button></div>
+          <div class="card-body" id="dash-orders"><div class="empty-state"><div class="e-icon">📭</div>No orders yet</div></div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="page" id="page-orders">
+        <div class="page-header"><h2>Orders</h2><p>Manage and update customer orders.</p></div>
+        <div class="search-row">
+          <input class="search-input" id="orderSearch" placeholder="Search by name or phone..." oninput="renderOrdersList()">
+        </div>
+        <div class="filter-pills">
+          <div class="filter-pill active" onclick="setOrderFilter('all',this)">All</div>
+          <div class="filter-pill" onclick="setOrderFilter('pending',this)">⏳ Pending</div>
+          <div class="filter-pill" onclick="setOrderFilter('dispatched',this)">🚚 Dispatched</div>
+          <div class="filter-pill" onclick="setOrderFilter('delivered',this)">✅ Delivered</div>
+        </div>
+        <div class="card"><div class="card-body" id="orders-list"><div class="empty-state"><div class="e-icon">📭</div>Loading...</div></div></div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="page" id="page-products">
+        <div class="top-row">
+          <div class="page-header" style="margin:0"><h2>Products</h2><p>Manage your store listings.</p></div>
+          <button class="add-btn-top" onclick="openProductSheet(null)">+ Add Product</button>
+        </div>
+        <div id="products-list" class="product-grid"></div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="page" id="page-categories">
+        <div class="top-row">
+          <div class="page-header" style="margin:0"><h2>Categories</h2><p>Add or remove product categories.</p></div>
+          <button class="add-btn-top" onclick="openCatSheet()">+ Add Category</button>
+        </div>
+        <div class="cat-list" id="cat-list"></div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div class="page" id="page-reviews">
+        <div class="page-header"><h2>Reviews</h2><p>Customer feedback on your products.</p></div>
+        <div id="reviews-list"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div class="page-header"><h2>Settings</h2><p>Manage your admin account.</p></div>
+        <div class="settings-section">
+          <h3>Change Email</h3>
+          <p>Update the email you use to log in to this panel.</p>
+          <div class="field"><label>New Email</label><input type="email" id="newEmail" placeholder="newemail@gmail.com"></div>
+          <div class="field"><label>Current Password</label><input type="password" id="emailChangePass" placeholder="Required to change email"></div>
+          <div class="form-error" id="emailErr"></div>
+          <div class="form-success" id="emailOk">✅ Email updated successfully.</div>
+          <button class="primary-btn" id="changeEmailBtn" onclick="changeEmail()" style="margin-top:0">Update Email</button>
+        </div>
+        <div class="settings-section">
+          <h3>Change Password</h3>
+          <p>Send a password reset link to your current admin email.</p>
+          <div class="form-success" id="passOk">✅ Reset link sent to your email.</div>
+          <div class="form-error" id="passErr"></div>
+          <button class="primary-btn" id="resetPassBtn" onclick="resetPass()">Send Reset Link</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL SHEET -->
+<div class="sheet-overlay" id="orderSheet" onclick="closeSheet('orderSheet',event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="sheet-title" id="od-id">Order</div>
+        <div id="od-status-badge"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:700;margin-bottom:8px">Customer</div>
+        <div id="od-customer" style="font-size:14px;line-height:1.7"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:700;margin-bottom:8px">Delivery Address</div>
+        <div id="od-address" style="font-size:14px"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:700;margin-bottom:8px">Items Ordered</div>
+        <div id="od-items"></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;font-weight:700;font-size:16px;border-top:2px solid var(--border);margin-top:4px"><span>Total</span><span id="od-total" style="color:var(--green)"></span></div>
+      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:700;margin-bottom:10px">Update Status</div>
+      <div class="status-btns">
+        <button class="status-action-btn pending" onclick="updateStatus('pending')">⏳ Pending</button>
+        <button class="status-action-btn dispatched" onclick="updateStatus('dispatched')">🚚 Dispatched</button>
+        <button class="status-action-btn delivered" onclick="updateStatus('delivered')">✅ Delivered</button>
+      </div>
+      <button class="danger-btn" onclick="deleteOrder()">🗑️ Delete This Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT FORM SHEET -->
+<div class="sheet-overlay" id="productSheet" onclick="closeSheet('productSheet',event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title" id="ps-title">Add Product</div>
+      <div class="sheet-sub">Fill in the product details below.</div>
+      <div class="field"><label>Product Name</label><input id="p-name" type="text" placeholder="e.g. Ceramic Mug Set"></div>
+      <div class="field"><label>Price (Rs.)</label><input id="p-price" type="number" placeholder="e.g. 650"></div>
+      <div class="field"><label>Category</label><select id="p-cat" style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--bg);width:100%"></select></div>
+      <div class="field"><label>Emoji Icon (fallback)</label><input id="p-emoji" type="text" placeholder="e.g. ☕" maxlength="2"></div>
+      <div class="field">
+        <label>Product Image URL</label>
+        <input id="p-img" type="url" placeholder="https://i.ibb.co/your-image.jpg">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Upload to imgbb.com → copy Direct Link → paste here</div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="p-desc" style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--bg);width:100%;height:80px;resize:none" placeholder="Brief product description..."></textarea></div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Out of Stock</div><div class="toggle-sub">Hides "Add" button on store</div></div>
+        <div class="toggle" id="p-stock-toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="form-error" id="prodErr" style="margin-top:12px"></div>
+      <br>
+      <button class="primary-btn" id="saveProdBtn" onclick="saveProduct()">Save Product</button>
+      <button class="secondary-btn" onclick="closeSheetBtn('productSheet')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY FORM SHEET -->
+<div class="sheet-overlay" id="catSheet" onclick="closeSheet('catSheet',event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-title">Add Category</div>
+      <div class="sheet-sub">New category will appear on the store immediately.</div>
+      <div class="field"><label>Category Name</label><input id="cat-name" type="text" placeholder="e.g. Kitchen"></div>
+      <div class="field"><label>Emoji Icon</label><input id="cat-icon" type="text" placeholder="e.g. 🍳" maxlength="2"></div>
+      <div class="form-error" id="catErr"></div>
+      <br>
+      <button class="primary-btn" id="saveCatBtn" onclick="saveCategory()">Add Category</button>
+      <button class="secondary-btn" onclick="closeSheetBtn('catSheet')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const ADMIN_EMAIL = "junkisnull@gmail.com"; // ← change here when needed
+
+const cfg = { apiKey:"AIzaSyDmfuNdrx5_PAYgkRON75GXzz2Wp0cnaec", authDomain:"markaz-store.firebaseapp.com", projectId:"markaz-store", storageBucket:"markaz-store.firebasestorage.app", messagingSenderId:"1005139766805", appId:"1:1005139766805:web:b1ff34b7fce0cac636681c" };
+const app = initializeApp(cfg);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let allOrders=[], allProducts=[], allCategories=[], allReviews=[];
+let selectedOrderId=null, editingProductId=null, orderFilter='all';
+
+// ---- AUTH ----
+onAuthStateChanged(auth, user => {
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').classList.add('show');
+    document.getElementById('topbarUser').textContent = user.email;
+    loadAll();
+  } else if (user) {
+    signOut(auth);
+    showLoginErr('Not authorized as admin.');
+  }
+});
+
+window.previewBypass = function() {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("adminApp").classList.add("show");
+  document.getElementById("topbarUser").textContent = "Preview Mode";
+  loadAll();
+}
+window.doLogin = async function() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const pass = document.getElementById('adminPass').value;
+  const btn = document.getElementById('loginBtn');
+  showLoginErr('');
+  if (!email||!pass) { showLoginErr('Enter email and password.'); return; }
+  btn.disabled=true; btn.textContent='Logging in...';
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e) { showLoginErr(e.code==='auth/invalid-credential'?'Wrong email or password.':'Login failed.'); }
+  btn.disabled=false; btn.textContent='Login to Admin Panel';
+}
+
+window.doForgot = async function() {
+  const email = document.getElementById('forgotAdminEmail').value.trim();
+  const err = document.getElementById('forgotErr');
+  const ok = document.getElementById('forgotOk');
+  const btn = document.getElementById('forgotBtn');
+  err.classList.remove('show'); ok.classList.remove('show');
+  if (!email) { err.textContent='Enter email.'; err.classList.add('show'); return; }
+  btn.disabled=true; btn.textContent='Sending...';
+  try { await sendPasswordResetEmail(auth, email); ok.classList.add('show'); }
+  catch(e) { err.textContent='Email not found.'; err.classList.add('show'); }
+  btn.disabled=false; btn.textContent='Send Reset Link';
+}
+
+window.doLogout = async function() {
+  await signOut(auth);
+  document.getElementById('adminApp').classList.remove('show');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('adminEmail').value='';
+  document.getElementById('adminPass').value='';
+}
+
+function showLoginErr(msg) {
+  const el = document.getElementById('loginErr');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+window.switchLoginTab = function(tab, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('lp-'+tab).classList.add('active');
+}
+
+// ---- NAV ----
+window.goPage = function(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if (el) el.classList.add('active');
+  closeSidebar();
+}
+window.toggleSidebar = () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+window.closeSidebar = () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+window.closeSheet = (id, e) => { if(e.target===document.getElementById(id)) closeSheetBtn(id); }
+window.closeSheetBtn = id => document.getElementById(id).classList.remove('open');
+
+// ---- LOAD ----
+async function loadAll() {
+  await Promise.all([loadOrders(), loadProducts(), loadCategories(), loadReviews()]);
+}
+
+async function loadOrders() {
+  try {
+    const q = query(collection(db,'orders'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    allOrders = snap.docs.map(d => ({docId:d.id,...d.data()}));
+  } catch(e) { allOrders=[]; }
+  renderDash(); renderOrdersList(); updateStats();
+}
+
+async function loadProducts() {
+  try {
+    const snap = await getDocs(collection(db,'products'));
+    allProducts = snap.docs.map(d => ({docId:d.id,...d.data()}));
+  } catch(e) { allProducts=[]; }
+  renderProducts(); updateStats();
+}
+
+async function loadCategories() {
+  try {
+    const snap = await getDocs(collection(db,'categories'));
+    allCategories = snap.docs.map(d => ({docId:d.id,...d.data()}));
+  } catch(e) { allCategories=[]; }
+  renderCategories(); populateCatSelect();
+}
+
+async function loadReviews() {
+  try {
+    const q = query(collection(db,'reviews'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    allReviews = snap.docs.map(d => ({docId:d.id,...d.data()}));
+  } catch(e) { allReviews=[]; }
+  renderReviews();
+}
+
+function updateStats() {
+  const pending = allOrders.filter(o=>o.status==='pending').length;
+  const rev = allOrders.reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('s-total').textContent = allOrders.length;
+  document.getElementById('s-pending').textContent = pending;
+  document.getElementById('s-revenue').textContent = rev>=1000?(rev/1000).toFixed(1)+'k':rev;
+  document.getElementById('s-products').textContent = allProducts.length;
+  document.getElementById('pendingBadge').textContent = pending;
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = ts.toDate?ts.toDate():new Date(ts);
+  const s = Math.floor((Date.now()-d)/1000);
+  if (s<60) return 'Just now';
+  if (s<3600) return Math.floor(s/60)+'m ago';
+  if (s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function orderHTML(o) {
+  const initials = (o.customer?.name||'?').slice(0,1).toUpperCase();
+  const preview = (o.items||[]).slice(0,2).map(i=>i.name).join(', ')+(o.items?.length>2?'...':'');
+  return `<div class="order-item" onclick="openOrderDetail('${o.docId}')">
+    <div class="order-avatar">${initials}</div>
+    <div class="order-info">
+      <div class="order-name">${o.customer?.name||'—'}</div>
+      <div class="order-meta">${o.customer?.phone||''} · ${preview}</div>
+    </div>
+    <div class="order-right">
+      <div class="order-amount">Rs. ${(o.total||0).toLocaleString()}</div>
+      <span class="status-pill pill-${o.status}">${o.status}</span>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${timeAgo(o.createdAt)}</div>
+    </div>
+  </div>`;
+}
+
+function renderDash() {
+  const el = document.getElementById('dash-orders');
+  el.innerHTML = allOrders.slice(0,5).map(orderHTML).join('') || '<div class="empty-state"><div class="e-icon">📭</div>No orders yet</div>';
+}
+
+window.renderOrdersList = function() {
+  const q = document.getElementById('orderSearch').value.toLowerCase();
+  let list = orderFilter==='all' ? allOrders : allOrders.filter(o=>o.status===orderFilter);
+  if (q) list = list.filter(o => (o.customer?.name||'').toLowerCase().includes(q)||(o.customer?.phone||'').includes(q));
+  document.getElementById('orders-list').innerHTML = list.length ? list.map(orderHTML).join('') : '<div class="empty-state"><div class="e-icon">📭</div>No orders found</div>';
+}
+
+window.setOrderFilter = function(f, el) {
+  orderFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderOrdersList();
+}
+
+window.openOrderDetail = function(docId) {
+  selectedOrderId = docId;
+  const o = allOrders.find(x=>x.docId===docId);
+  const c = o.customer||{};
+  document.getElementById('od-id').textContent = 'Order #'+docId.slice(-6).toUpperCase();
+  document.getElementById('od-status-badge').innerHTML = `<span class="status-pill pill-${o.status}">${o.status}</span>`;
+  document.getElementById('od-customer').innerHTML = `<strong>${c.name||'—'}</strong><br>${c.phone||''}${c.email?'<br>'+c.email:''}${c.notes?'<br><em style="color:var(--muted)">Note: '+c.notes+'</em>':''}`;
+  document.getElementById('od-address').textContent = c.address||'—';
+  document.getElementById('od-items').innerHTML = (o.items||[]).map(i=>`<div class="detail-row"><span>${i.emoji||''} ${i.name} × ${i.qty}</span><span style="font-weight:600">Rs. ${(i.price*i.qty).toLocaleString()}</span></div>`).join('');
+  document.getElementById('od-total').textContent = 'Rs. '+(o.total||0).toLocaleString();
+  document.querySelectorAll('.status-action-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.status-action-btn.${o.status}`).classList.add('active');
+  document.getElementById('orderSheet').classList.add('open');
+}
+
+window.updateStatus = async function(status) {
+  try {
+    await updateDoc(doc(db,'orders',selectedOrderId), {status});
+    const o = allOrders.find(x=>x.docId===selectedOrderId);
+    o.status = status;
+    document.getElementById('od-status-badge').innerHTML = `<span class="status-pill pill-${status}">${status}</span>`;
+    document.querySelectorAll('.status-action-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector(`.status-action-btn.${status}`).classList.add('active');
+    renderDash(); renderOrdersList(); updateStats();
+  } catch(e) { alert('Error updating status.'); }
+}
+
+window.deleteOrder = async function() {
+  if (!confirm('Delete this order permanently? This cannot be undone.')) return;
+  try {
+    await deleteDoc(doc(db,'orders',selectedOrderId));
+    allOrders = allOrders.filter(o=>o.docId!==selectedOrderId);
+    closeSheetBtn('orderSheet');
+    renderDash(); renderOrdersList(); updateStats();
+    showToast('Order deleted');
+  } catch(e) { alert('Error deleting order.'); }
+}
+
+// ---- PRODUCTS ----
+function renderProducts() {
+  const el = document.getElementById('products-list');
+  if (!allProducts.length) { el.innerHTML='<div class="empty-state" style="grid-column:span 3"><div class="e-icon">🏷️</div>No products yet. Add your first one!</div>'; return; }
+  el.innerHTML = allProducts.map(p=>`
+    <div class="product-card-admin">
+      <div class="product-card-img">
+        ${p.imageUrl?`<img src="${p.imageUrl}" alt="${p.name}" onerror="this.style.display='none'">`:p.emoji||'📦'}
+        ${p.outOfStock?'<div class="out-stock-tag">Out of Stock</div>':''}
+      </div>
+      <div class="product-card-body">
+        <div class="product-card-name">${p.name}</div>
+        <div class="product-card-cat">${p.category||'—'}</div>
+        <div class="product-card-price">Rs. ${Number(p.price).toLocaleString()}</div>
+        <div class="product-card-actions">
+          <button class="action-btn btn-edit" onclick="openProductSheet('${p.docId}')">✏️ Edit</button>
+          <button class="action-btn btn-delete" onclick="deleteProduct('${p.docId}')">🗑️ Del</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function populateCatSelect() {
+  const sel = document.getElementById('p-cat');
+  sel.innerHTML = allCategories.map(c=>`<option value="${c.slug}">${c.icon||''} ${c.name}</option>`).join('') || '<option value="">No categories yet</option>';
+}
+
+window.openProductSheet = function(docId) {
+  editingProductId = docId;
+  const toggle = document.getElementById('p-stock-toggle');
+  if (docId) {
+    const p = allProducts.find(x=>x.docId===docId);
+    document.getElementById('ps-title').textContent = 'Edit Product';
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('p-price').value = p.price;
+    document.getElementById('p-cat').value = p.category||'';
+    document.getElementById('p-emoji').value = p.emoji||'';
+    document.getElementById('p-img').value = p.imageUrl||'';
+    document.getElementById('p-desc').value = p.desc||'';
+    toggle.classList.toggle('on', !!p.outOfStock);
+  } else {
+    document.getElementById('ps-title').textContent = 'Add Product';
+    ['p-name','p-price','p-emoji','p-img','p-desc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('p-cat').value = allCategories[0]?.slug||'';
+    toggle.classList.remove('on');
+  }
+  document.getElementById('productSheet').classList.add('open');
+}
+
+window.saveProduct = async function() {
+  const name = document.getElementById('p-name').value.trim();
+  const price = parseInt(document.getElementById('p-price').value);
+  const category = document.getElementById('p-cat').value;
+  const emoji = document.getElementById('p-emoji').value.trim()||'📦';
+  const imageUrl = document.getElementById('p-img').value.trim();
+  const desc = document.getElementById('p-desc').value.trim();
+  const outOfStock = document.getElementById('p-stock-toggle').classList.contains('on');
+  const errEl = document.getElementById('prodErr');
+  errEl.classList.remove('show');
+  if (!name||!price) { errEl.textContent='Name and price are required.'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('saveProdBtn');
+  btn.disabled=true; btn.textContent='Saving...';
+  const data = {name,price,category,emoji,imageUrl,desc,outOfStock};
+  try {
+    if (editingProductId) {
+      await updateDoc(doc(db,'products',editingProductId), data);
+      const idx = allProducts.findIndex(x=>x.docId===editingProductId);
+      allProducts[idx] = {...allProducts[idx],...data};
+    } else {
+      const ref = await addDoc(collection(db,'products'), {...data, id:Date.now()});
+      allProducts.push({docId:ref.id,...data});
+    }
+    closeSheetBtn('productSheet');
+    renderProducts(); updateStats();
+    showToast('Product saved ✓');
+  } catch(e) { errEl.textContent='Error: '+e.message; errEl.classList.add('show'); }
+  btn.disabled=false; btn.textContent='Save Product';
+}
+
+window.deleteProduct = async function(docId) {
+  if (!confirm('Delete this product?')) return;
+  try {
+    await deleteDoc(doc(db,'products',docId));
+    allProducts = allProducts.filter(p=>p.docId!==docId);
+    renderProducts(); updateStats();
+    showToast('Product deleted');
+  } catch(e) { alert('Error deleting.'); }
+}
+
+// ---- CATEGORIES ----
+function renderCategories() {
+  const el = document.getElementById('cat-list');
+  if (!allCategories.length) { el.innerHTML='<div class="empty-state"><div class="e-icon">🗂️</div>No categories yet. Add your first one!</div>'; return; }
+  el.innerHTML = allCategories.map(c=>`
+    <div class="cat-row">
+      <div class="cat-icon-display">${c.icon||'📁'}</div>
+      <div class="cat-info">
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-slug">slug: ${c.slug}</div>
+      </div>
+      <button class="btn-del-cat" onclick="deleteCategory('${c.docId}')">Remove</button>
+    </div>`).join('');
+}
+
+window.openCatSheet = () => document.getElementById('catSheet').classList.add('open');
+
+window.saveCategory = async function() {
+  const name = document.getElementById('cat-name').value.trim();
+  const icon = document.getElementById('cat-icon').value.trim();
+  const errEl = document.getElementById('catErr');
+  errEl.classList.remove('show');
+  if (!name) { errEl.textContent='Category name is required.'; errEl.classList.add('show'); return; }
+  const slug = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const btn = document.getElementById('saveCatBtn');
+  btn.disabled=true; btn.textContent='Saving...';
+  try {
+    const ref = await addDoc(collection(db,'categories'), {name, icon, slug});
+    allCategories.push({docId:ref.id, name, icon, slug});
+    closeSheetBtn('catSheet');
+    renderCategories(); populateCatSelect();
+    document.getElementById('cat-name').value='';
+    document.getElementById('cat-icon').value='';
+    showToast('Category added ✓');
+  } catch(e) { errEl.textContent='Error saving.'; errEl.classList.add('show'); }
+  btn.disabled=false; btn.textContent='Add Category';
+}
+
+window.deleteCategory = async function(docId) {
+  if (!confirm('Remove this category?')) return;
+  try {
+    await deleteDoc(doc(db,'categories',docId));
+    allCategories = allCategories.filter(c=>c.docId!==docId);
+    renderCategories(); populateCatSelect();
+    showToast('Category removed');
+  } catch(e) { alert('Error removing.'); }
+}
+
+// ---- REVIEWS ----
+function renderReviews() {
+  const el = document.getElementById('reviews-list');
+  if (!allReviews.length) { el.innerHTML='<div class="empty-state"><div class="e-icon">⭐</div>No reviews yet</div>'; return; }
+  el.innerHTML = allReviews.map(r=>`
+    <div class="review-card">
+      <div class="review-top">
+        <div class="review-name">${r.name||'Anonymous'}</div>
+        <div class="review-stars">${'★'.repeat(r.stars||0)}${'☆'.repeat(5-(r.stars||0))}</div>
+      </div>
+      <div class="review-product">${r.product||''}</div>
+      <div class="review-text">${r.text||''}</div>
+      <div class="review-time">${timeAgo(r.createdAt)}</div>
+      <button class="btn-del-review" onclick="deleteReview('${r.docId}')">🗑️ Remove</button>
+    </div>`).join('');
+}
+
+window.deleteReview = async function(docId) {
+  if (!confirm('Remove this review?')) return;
+  try {
+    await deleteDoc(doc(db,'reviews',docId));
+    allReviews = allReviews.filter(r=>r.docId!==docId);
+    renderReviews();
+    showToast('Review removed');
+  } catch(e) { alert('Error removing.'); }
+}
+
+// ---- SETTINGS ----
+window.changeEmail = async function() {
+  const newEmail = document.getElementById('newEmail').value.trim();
+  const pass = document.getElementById('emailChangePass').value;
+  const err = document.getElementById('emailErr');
+  const ok = document.getElementById('emailOk');
+  err.classList.remove('show'); ok.classList.remove('show');
+  if (!newEmail||!pass) { err.textContent='Fill in both fields.'; err.classList.add('show'); return; }
+  const btn = document.getElementById('changeEmailBtn');
+  btn.disabled=true; btn.textContent='Updating...';
+  try {
+    const user = auth.currentUser;
+    const cred = EmailAuthProvider.credential(user.email, pass);
+    await reauthenticateWithCredential(user, cred);
+    await updateEmail(user, newEmail);
+    ok.classList.add('show');
+  } catch(e) {
+    err.textContent = e.code==='auth/wrong-password'?'Wrong password.':'Error: '+e.message;
+    err.classList.add('show');
+  }
+  btn.disabled=false; btn.textContent='Update Email';
+}
+
+window.resetPass = async function() {
+  const ok = document.getElementById('passOk');
+  const err = document.getElementById('passErr');
+  const btn = document.getElementById('resetPassBtn');
+  ok.classList.remove('show'); err.classList.remove('show');
+  btn.disabled=true; btn.textContent='Sending...';
+  try { await sendPasswordResetEmail(auth, auth.currentUser.email); ok.classList.add('show'); }
+  catch(e) { err.textContent='Error sending reset email.'; err.classList.add('show'); }
+  btn.disabled=false; btn.textContent='Send Reset Link';
+}
+
+// ---- TOAST ----
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style,{position:'fixed',bottom:'20px',left:'50%',transform:'translateX(-50%)',background:'#111',color:'#fff',padding:'10px 20px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',zIndex:'999',opacity:'0',transition:'opacity 0.2s',fontFamily:'DM Sans,sans-serif',whiteSpace:'nowrap'});
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='1',10);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2200);
+}
+</script>
+</body>
+</html>
