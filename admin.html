@@ -1099,6 +1099,42 @@ function showToast(msg) {
   setTimeout(()=>t.style.opacity='1',10);
   setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2400);
 }
+  // ---- CLOUDINARY UPLOAD ----
+const CLOUD_NAME = "YOUR_CLOUD_NAME";       // ← paste your cloud name
+const UPLOAD_PRESET = "YOUR_UPLOAD_PRESET"; // ← paste your upload preset
+
+window.uploadToCloudinary = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = document.getElementById('upload-label-text');
+  const imgWrap = document.getElementById('img-preview-wrap');
+  const imgPreview = document.getElementById('img-preview');
+  label.textContent = 'Uploading...';
+  document.getElementById('upload-label').style.opacity = '0.6';
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  try {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST', body: formData
+    });
+    const data = await res.json();
+    if (data.secure_url) {
+      document.getElementById('p-img').value = data.secure_url;
+      imgPreview.src = data.secure_url;
+      imgWrap.style.display = 'block';
+      label.textContent = '✅ Uploaded! Change image?';
+    } else {
+      label.textContent = '❌ Upload failed. Try again';
+    }
+  } catch(e) {
+    label.textContent = '❌ Upload failed. Try again';
+  }
+  document.getElementById('upload-label').style.opacity = '1';
+}
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
