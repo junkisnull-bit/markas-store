@@ -517,16 +517,12 @@ body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text
         <label>Product Image URL</label>
         
   <label>Product Image</label>
- <div class="field">
+<div class="field">
   <label>Product Image</label>
   <div style="display:flex;flex-direction:column;gap:8px">
+    <input id="p-img" type="url" placeholder="Image URL will appear here after upload" style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--bg);width:100%">
+    <label id="upload-label" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--green);background:var(--green-light);transition:all 0.2s">
     <input id="p-img" type="url" ...>
-    <label id="upload-label" ...>
-      <span>📤</span><span id="upload-label-text">Upload Image</span>
-      <input type="file" id="p-img-file" accept="image/*" style="display:none" onchange="uploadToCloudinary(this)">
-    </label>
-    <div id="img-preview-wrap" style="display:none">
-      <img id="img-preview" ...>
     </div>
   </div>
 </div>
