@@ -66,7 +66,9 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
 /* FOOTER */
 .site-footer { background:#1a2e22; color:rgba(255,255,255,0.8); padding:32px 16px 24px; margin-top:20px; }
 .footer-logo { font-family:'Playfair Display',serif; font-size:22px; color:#fff; margin-bottom:4px; }
-.footer-tagline { font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:20px; }
+.footer-tagline { font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:16px; }
+.footer-delivery-strip { display:flex; gap:16px; flex-wrap:wrap; background:rgba(255,255,255,0.07); border-radius:12px; padding:12px 14px; margin-bottom:20px; }
+.footer-dstrip-item { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:rgba(255,255,255,0.75); }
 .footer-links { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
 .footer-link { font-size:13px; color:rgba(255,255,255,0.7); cursor:pointer; padding:4px 0; }
 .footer-link:hover { color:#fff; }
@@ -74,9 +76,6 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
 .social-btn { width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; text-decoration:none; transition:background 0.15s; }
 .social-btn:hover { background:rgba(255,255,255,0.2); }
 .footer-bottom { font-size:11px; color:rgba(255,255,255,0.35); padding-top:16px; border-top:1px solid rgba(255,255,255,0.1); }
-.delivery-info-strip { background:var(--accent-light); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; gap:16px; overflow-x:auto; scrollbar-width:none; }
-.delivery-info-strip::-webkit-scrollbar { display:none; }
-.dstrip-item { flex-shrink:0; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:var(--accent); }
 
 /* OVERLAYS / SHEETS */
 .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:200; align-items:flex-end; }
@@ -231,13 +230,6 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
   <button class="signout-btn" onclick="doSignOut()">Sign out</button>
 </div>
 
-<div class="delivery-info-strip">
-  <div class="dstrip-item">🚚 Fast Delivery in ISB & RWP</div>
-  <div class="dstrip-item">💵 Cash on Delivery</div>
-  <div class="dstrip-item">↩️ 6-Day Returns</div>
-  <div class="dstrip-item">📦 Standard & Express Options</div>
-</div>
-
 <div class="hero">
   <h1>Everything for your home, delivered.</h1>
   <p>Crockery, kitchen, decor & more — right to your door in Islamabad & Rawalpindi.</p>
@@ -270,6 +262,12 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
 <footer class="site-footer">
   <div class="footer-logo">Markaz</div>
   <div class="footer-tagline">Your everyday store — delivered.</div>
+  <div class="footer-delivery-strip">
+    <div class="footer-dstrip-item">🚚 Fast Delivery in ISB & RWP</div>
+    <div class="footer-dstrip-item">💵 Cash on Delivery</div>
+    <div class="footer-dstrip-item">↩️ 6-Day Returns</div>
+    <div class="footer-dstrip-item">📦 Standard & Express Options</div>
+  </div>
   <div class="footer-links">
     <div class="footer-link" onclick="openSheet('aboutSheet')">ℹ️ About Us</div>
     <div class="footer-link" onclick="openSheet('trackingSheet')">📦 Track Order</div>
@@ -282,8 +280,12 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
     <a class="social-btn" href="https://wa.me/923118885604" target="_blank">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
-    <a class="social-btn" href="https://instagram.com" target="_blank">📷</a>
-    <a class="social-btn" href="https://facebook.com" target="_blank">👥</a>
+    <a class="social-btn" href="https://www.instagram.com/maryamnawazofficial?igsh=MW1zcTc2ODAwYW9jdw==" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    </a>
+    <a class="social-btn" href="https://www.facebook.com/ImranKhanOfficial" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke="white" stroke-width="0" fill="white"/></svg>
+    </a>
   </div>
   <div class="footer-bottom">© 2026 Markaz. All rights reserved. · Islamabad & Rawalpindi</div>
 </footer>
@@ -627,7 +629,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// ---- DELIVERY FEE LOGIC ----
 const ISB_AREAS = ['f-6','f-7','f-8','f-9','f-10','f-11','g-6','g-7','g-8','g-9','g-10','g-11','g-13','e-7','e-8','e-11','i-8','i-9','i-10','i-11','dha islamabad','bahria town','blue area','diplomatic'];
 const RWP_AREAS = ['saddar','westridge','chaklala','pwd','cbr','rawat','gulberg','bahria rawalpindi','adiala','peshawar road','murree road'];
 const VALID_AREAS = [...ISB_AREAS,...RWP_AREAS,'islamabad','rawalpindi','isb','rwp','phase'];
@@ -643,7 +644,6 @@ function isValidLocation(addr) { return VALID_AREAS.some(a=>addr.toLowerCase().i
 
 let products=[], categories=[], cart=[], activeCategory='all', currentModalProduct=null, currentUser=null, pendingCheckout=false, selectedRating=0, selectedDelivery='standard';
 
-// ---- AUTH ----
 onAuthStateChanged(auth, user => {
   currentUser = user;
   const btn = document.getElementById('authNavBtn');
@@ -697,7 +697,6 @@ window.doForgotPassword = async function() {
   btn.disabled=false;btn.textContent='Send Reset Link';
 }
 
-// ---- SHEET CONTROLS ----
 window.openSheet = id=>document.getElementById(id).classList.add('open');
 window.closeSheet = id=>document.getElementById(id).classList.remove('open');
 window.openAuthSheet = ()=>openSheet('authSheet');
@@ -709,7 +708,6 @@ window.switchAuthTab = tab=>{
   document.getElementById('signupForm').classList.toggle('hidden',tab!=='signup');
 }
 
-// ---- DELIVERY ----
 window.selectDelivery = function(type) {
   selectedDelivery = type;
   document.getElementById('opt-standard').classList.toggle('selected', type==='standard');
@@ -727,7 +725,6 @@ window.updateDeliveryFee = function() {
   feeEl.classList.add('show');
 }
 
-// ---- REVIEW ----
 window.setRating = n=>{ selectedRating=n; document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('selected',i<n)); }
 window.submitReview = async function() {
   const product=document.getElementById('reviewProduct').value.trim(), text=document.getElementById('reviewText').value.trim();
@@ -743,7 +740,6 @@ window.submitReview = async function() {
   btn.disabled=false;btn.textContent='Submit Review';
 }
 
-// ---- ORDER TRACKING ----
 window.trackOrder = async function() {
   const input = document.getElementById('trackingInput').value.trim().toUpperCase();
   const err = document.getElementById('trackingError');
@@ -773,7 +769,6 @@ window.trackOrder = async function() {
   btn.disabled=false; btn.textContent='Track Order';
 }
 
-// ---- LOAD DATA ----
 async function loadAll() { await Promise.all([loadCategories(), loadProducts()]); }
 
 async function loadCategories() {
