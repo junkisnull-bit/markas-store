@@ -13,7 +13,6 @@
 <meta name="apple-mobile-web-app-title" content="Markaz">
 <meta name="description" content="Crockery, kitchen, decor & more — delivered in Islamabad & Rawalpindi">
 <link rel="manifest" href="manifest.json">
-<!-- Apple touch icon (green background with store emoji) -->
 <link rel="apple-touch-icon" href="icon-192.png">
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
@@ -22,7 +21,7 @@
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-/* PWA SPLASH / INSTALL BANNER */
+/* PWA INSTALL BANNER */
 #installBanner { display:none; position:fixed; bottom:0; left:0; right:0; background:#0f1e15; color:#fff; padding:14px 16px; z-index:600; border-top:1px solid rgba(255,255,255,0.1); animation:slideUp 0.3s ease; }
 #installBanner.show { display:flex; align-items:center; gap:12px; }
 .install-icon { font-size:28px; flex-shrink:0; }
@@ -78,9 +77,13 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
 .product-img img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
 .product-img .emoji-fallback { font-size:40px; z-index:1; }
 .out-of-stock-badge { position:absolute; top:8px; right:8px; background:rgba(192,57,43,0.9); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:10px; text-transform:uppercase; z-index:2; }
+.discount-badge-card { position:absolute; top:8px; left:8px; background:#e74c3c; color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:10px; z-index:2; }
 .product-info { padding:10px; }
 .product-name { font-size:13px; font-weight:500; line-height:1.3; margin-bottom:4px; }
+.product-price-wrap { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:0; }
 .product-price { font-size:15px; font-weight:600; color:var(--accent); }
+.product-price-orig { font-size:12px; color:var(--muted); text-decoration:line-through; }
+.discount-tag { font-size:10px; font-weight:700; background:#fde8e6; color:var(--danger); padding:2px 6px; border-radius:8px; }
 .add-btn { width:100%; margin-top:8px; padding:8px; background:var(--accent-light); color:var(--accent); border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s; }
 .add-btn:hover { background:var(--accent); color:#fff; }
 .add-btn:disabled { background:var(--border); color:var(--muted); cursor:not-allowed; }
@@ -115,7 +118,10 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
 .modal-img img { width:100%; height:100%; object-fit:cover; }
 .modal-body { padding:16px; }
 .modal-name { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:4px; }
-.modal-price { font-size:20px; font-weight:600; color:var(--accent); margin-bottom:10px; }
+.modal-price-wrap { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.modal-price { font-size:20px; font-weight:600; color:var(--accent); }
+.modal-price-orig { font-size:15px; color:var(--muted); text-decoration:line-through; }
+.modal-discount-tag { background:#e74c3c; color:#fff; font-size:12px; font-weight:700; padding:3px 10px; border-radius:10px; }
 .modal-desc { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
 .modal-add-btn { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; }
 .modal-add-btn:disabled { background:var(--muted); cursor:not-allowed; }
@@ -364,7 +370,7 @@ nav { position:sticky; top:0; z-index:100; background:var(--white); border-botto
     <div class="modal-img" id="modalImg"></div>
     <div class="modal-body">
       <div class="modal-name" id="modalName"></div>
-      <div class="modal-price" id="modalPrice"></div>
+      <div class="modal-price-wrap" id="modalPriceWrap"></div>
       <div class="modal-desc" id="modalDesc"></div>
       <button class="modal-add-btn" id="modalAddBtn" onclick="addFromModal()">Add to Cart</button>
     </div>
@@ -621,7 +627,6 @@ document.getElementById('installBtn').addEventListener('click', async () => {
 window.addEventListener('appinstalled', () => {
   document.getElementById('installBanner').classList.remove('show');
 });
-// Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -640,6 +645,12 @@ function getDeliveryFee(addr, deliveryType) {
   return deliveryType === 'express' ? base + 100 : base;
 }
 function isValidLocation(addr) { return VALID_AREAS.some(a=>addr.toLowerCase().includes(a)); }
+
+// ===== DISCOUNT HELPER =====
+function getDiscountedPrice(p) {
+  if (!p.discount || p.discount <= 0) return null;
+  return Math.round(p.price * (1 - p.discount / 100));
+}
 
 let products=[], categories=[], cart=[], activeCategory='all', currentModalProduct=null, currentUser=null, pendingCheckout=false, selectedRating=0, selectedDelivery='standard';
 
@@ -796,12 +807,24 @@ function renderProducts(list) {
     return;
   }
   grid.innerHTML=list.map(p=>{
+    const discountedPrice = getDiscountedPrice(p);
     const imgHtml=p.imageUrl?`<img src="${p.imageUrl}" alt="${p.name}" onerror="this.style.display='none'">`:`<span class="emoji-fallback">${p.emoji||'📦'}</span>`;
+    const priceHtml = discountedPrice
+      ? `<div class="product-price-wrap">
+           <span class="product-price">Rs. ${discountedPrice.toLocaleString()}</span>
+           <span class="product-price-orig">Rs. ${Number(p.price).toLocaleString()}</span>
+           <span class="discount-tag">-${p.discount}%</span>
+         </div>`
+      : `<div class="product-price-wrap"><span class="product-price">Rs. ${Number(p.price).toLocaleString()}</span></div>`;
     return `<div class="product-card" onclick="window._openModal('${p.firestoreId}')">
-      <div class="product-img">${imgHtml}${p.outOfStock?'<div class="out-of-stock-badge">Out of Stock</div>':''}</div>
+      <div class="product-img">
+        ${imgHtml}
+        ${p.outOfStock?'<div class="out-of-stock-badge">Out of Stock</div>':''}
+        ${p.discount>0?`<div class="discount-badge-card">-${p.discount}%</div>`:''}
+      </div>
       <div class="product-info">
         <div class="product-name">${p.name}</div>
-        <div class="product-price">Rs. ${Number(p.price).toLocaleString()}</div>
+        ${priceHtml}
         <button class="add-btn" ${p.outOfStock?'disabled':''} onclick="event.stopPropagation();window._addToCart('${p.firestoreId}')">${p.outOfStock?'Out of Stock':'+ Add'}</button>
       </div>
     </div>`;
@@ -813,7 +836,19 @@ window._openModal = function(fid) {
   const mi=document.getElementById('modalImg');
   mi.innerHTML=p.imageUrl?`<img src="${p.imageUrl}" alt="${p.name}">`:p.emoji||'📦';
   document.getElementById('modalName').textContent=p.name;
-  document.getElementById('modalPrice').textContent='Rs. '+Number(p.price).toLocaleString();
+
+  // ===== DISCOUNT DISPLAY IN MODAL =====
+  const discountedPrice = getDiscountedPrice(p);
+  const priceWrap = document.getElementById('modalPriceWrap');
+  if (discountedPrice) {
+    priceWrap.innerHTML = `
+      <span class="modal-price">Rs. ${discountedPrice.toLocaleString()}</span>
+      <span class="modal-price-orig">Rs. ${Number(p.price).toLocaleString()}</span>
+      <span class="modal-discount-tag">-${p.discount}% OFF</span>`;
+  } else {
+    priceWrap.innerHTML = `<span class="modal-price">Rs. ${Number(p.price).toLocaleString()}</span>`;
+  }
+
   document.getElementById('modalDesc').textContent=p.desc||'';
   const btn=document.getElementById('modalAddBtn');
   btn.disabled=!!p.outOfStock; btn.textContent=p.outOfStock?'Out of Stock':'Add to Cart';
@@ -825,8 +860,10 @@ window.addFromModal=()=>{ if(currentModalProduct&&!currentModalProduct.outOfStoc
 
 window._addToCart=function(fid){
   const p=products.find(x=>x.firestoreId===fid); if(!p||p.outOfStock)return;
+  // Use discounted price in cart if applicable
+  const effectivePrice = getDiscountedPrice(p) || p.price;
   const ex=cart.find(c=>c.firestoreId===fid);
-  if(ex)ex.qty++;else cart.push({...p,qty:1});
+  if(ex)ex.qty++;else cart.push({...p, effectivePrice, qty:1});
   updateCartUI();showToast('Added to cart ✓');
   const cc=document.getElementById('cartCount');
   cc.classList.remove('bounce'); void cc.offsetWidth; cc.classList.add('bounce');
@@ -834,14 +871,15 @@ window._addToCart=function(fid){
 }
 
 function updateCartUI() {
-  const subtotal=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const subtotal=cart.reduce((s,i)=>s+(i.effectivePrice||i.price)*i.qty,0);
   const count=cart.reduce((s,i)=>s+i.qty,0);
   document.getElementById('cartCount').textContent=count;
   const itemsEl=document.getElementById('cartItems'), footerEl=document.getElementById('cartFooter');
   if (!cart.length){itemsEl.innerHTML='<div class="empty-cart"><div class="empty-icon">🛒</div>Your cart is empty</div>';footerEl.style.display='none';return;}
   itemsEl.innerHTML=cart.map(i=>{
     const imgHtml=i.imageUrl?`<img src="${i.imageUrl}" alt="${i.name}">`:i.emoji||'📦';
-    return `<div class="cart-item"><div class="cart-item-img">${imgHtml}</div><div class="cart-item-info"><div class="cart-item-name">${i.name}</div><div class="cart-item-price">Rs. ${(i.price*i.qty).toLocaleString()}</div><div class="qty-ctrl"><button class="qty-btn" onclick="window._changeQty('${i.firestoreId}',-1)">−</button><span class="qty-num">${i.qty}</span><button class="qty-btn" onclick="window._changeQty('${i.firestoreId}',1)">+</button></div></div></div>`;
+    const ep = i.effectivePrice||i.price;
+    return `<div class="cart-item"><div class="cart-item-img">${imgHtml}</div><div class="cart-item-info"><div class="cart-item-name">${i.name}</div><div class="cart-item-price">Rs. ${(ep*i.qty).toLocaleString()}</div><div class="qty-ctrl"><button class="qty-btn" onclick="window._changeQty('${i.firestoreId}',-1)">−</button><span class="qty-num">${i.qty}</span><button class="qty-btn" onclick="window._changeQty('${i.firestoreId}',1)">+</button></div></div></div>`;
   }).join('');
   footerEl.style.display='block';
   document.getElementById('cartSubtotal').textContent='Rs. '+subtotal.toLocaleString();
@@ -899,19 +937,19 @@ window.placeOrder=async function(){
   const btn=document.getElementById('placeOrderBtn');
   btn.disabled=true;btn.textContent='Placing order...';
   const deliveryFee=getDeliveryFee(addr,selectedDelivery);
-  const subtotal=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const subtotal=cart.reduce((s,i)=>s+(i.effectivePrice||i.price)*i.qty,0);
   const total=subtotal+deliveryFee;
   try{
     const ref=await addDoc(collection(db,'orders'),{
       customer:{name,phone,address:addr,notes,email:currentUser?.email||''},
-      items:cart.map(i=>({name:i.name,qty:i.qty,price:i.price,emoji:i.emoji||'📦',imageUrl:i.imageUrl||''})),
+      items:cart.map(i=>({name:i.name,qty:i.qty,price:i.effectivePrice||i.price,emoji:i.emoji||'📦',imageUrl:i.imageUrl||''})),
       subtotal,deliveryFee,total,deliveryType:selectedDelivery,status:'pending',userId:currentUser?.uid||'',createdAt:serverTimestamp()
     });
     closeCart();
     const orderId = '#'+ref.id.slice(-6).toUpperCase();
     document.getElementById('successOrderId').textContent=orderId;
     document.getElementById('successScreen').classList.add('show');
-    const itemsList = cart.map(i=>`• ${i.name} x${i.qty} — Rs.${(i.price*i.qty).toLocaleString()}`).join('%0A');
+    const itemsList = cart.map(i=>`• ${i.name} x${i.qty} — Rs.${((i.effectivePrice||i.price)*i.qty).toLocaleString()}`).join('%0A');
     const waMsg = encodeURIComponent(`Hi Markaz! 🎉 I just placed an order.%0A%0AOrder ID: ${orderId}%0AName: ${name}%0APhone: ${phone}%0AAddress: ${addr}%0ADelivery: ${selectedDelivery}%0A%0AItems:%0A`) + itemsList + encodeURIComponent(`%0A%0ATotal: Rs.${total.toLocaleString()} (incl. Rs.${deliveryFee} delivery)%0A%0APlease confirm. Thanks!`);
     setTimeout(()=>{ window.open('https://wa.me/923118885604?text='+waMsg,'_blank'); }, 1200);
   }catch(e){alert('Error placing order. Please try again.');}
