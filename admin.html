@@ -516,16 +516,19 @@ body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text
       <div class="field">
         <label>Product Image URL</label>
         
-  <label>Product Image</label>
-<div class="field">
+
+  <div class="field">
   <label>Product Image</label>
   <div style="display:flex;flex-direction:column;gap:8px">
     <input id="p-img" type="url" placeholder="Image URL will appear here after upload" style="padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--bg);width:100%">
     <label id="upload-label" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--green);background:var(--green-light);transition:all 0.2s">
-    <input id="p-img" type="url" ...>
+      <span>📤</span><span id="upload-label-text">Upload Image</span>
+      <input type="file" id="p-img-file" accept="image/*" style="display:none" onchange="uploadToCloudinary(this)">
+    </label>
+    <div id="img-preview-wrap" style="display:none">
+      <img id="img-preview" style="width:100%;border-radius:10px;aspect-ratio:4/3;object-fit:cover;border:1.5px solid var(--border)">
     </div>
-  </div>
-</div>
+
       <div class="field"><label>Description</label><textarea id="p-desc" style="padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:'Sora',sans-serif;outline:none;background:var(--bg);width:100%;height:80px;resize:none" placeholder="Brief product description..."></textarea></div>
       <div class="toggle-row">
         <div><div class="toggle-label">Out of Stock</div><div class="toggle-sub">Hides "Add" button on store</div></div>
@@ -1098,9 +1101,9 @@ function showToast(msg) {
   setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2400);
 }
   // ---- CLOUDINARY UPLOAD ----
-const CLOUD_NAME = "YOUR_CLOUD_NAME";       // ← paste your cloud name
-const UPLOAD_PRESET = "YOUR_UPLOAD_PRESET"; // ← paste your upload preset
-
+const CLOUD_NAME = "dqvqf9enu";
+const UPLOAD_PRESET = "markaz_uploads";
+  
 window.uploadToCloudinary = async function(input) {
   const file = input.files[0];
   if (!file) return;
